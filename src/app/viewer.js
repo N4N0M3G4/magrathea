@@ -1,3 +1,4 @@
+import { startBundles } from '../bundles/runtime.js';
 import * as Cesium from 'cesium';
 import { applyModelAtmosphereWorkaround } from './atmosphereCompat.js';
 import { StarrySky } from '../sky/starrySky.js';
@@ -151,6 +152,8 @@ export function createApplicationViewer({ container, creditContainer }) {
     viewer.scene.skyAtmosphere.atmosphereLightIntensity = 18;
     viewer.scene.skyAtmosphere.saturationShift = -0.12;
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
+    // GEO-RECON: optional Data Bundles (see BUNDLES.md).
+    startBundles(viewer).catch((e) => console.warn('[bundles]', e));
     return viewer;
   } catch (error) {
     viewer.destroy();

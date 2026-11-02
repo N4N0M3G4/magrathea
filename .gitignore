@@ -28,3 +28,8 @@ pinokio/.installed
 
 # Transient: a release interrupted mid-assembly (npm run changelog recovers it)
 changelog.d/.assembling/
+
+# GEO-RECON Data Bundles: installed payloads and local state (see BUNDLES.md)
+/public/bundles/
+/public/events/bhote-koshi-2026/
+/bundles/state.json

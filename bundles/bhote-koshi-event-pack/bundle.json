@@ -1,0 +1,21 @@
+{
+  "id": "bhote-koshi-event-pack",
+  "name": "Bhote Koshi 2026 event imagery (Vantor / GeoPera)",
+  "version": "upstream-0d1a681",
+  "license": "CC BY-NC 4.0 (NonCommercial). Not MIT.",
+  "attribution": "Vantor imagery; GeoPera river centerline",
+  "sizeBytes": 2400000,
+  "defaultInstalled": false,
+  "source": {
+    "type": "git",
+    "commit": "0d1a681",
+    "url": "https://github.com/bilawalsidhu/gods-eye-view/tree/0d1a681/public/events/bhote-koshi-2026",
+    "files": [
+      { "from": "public/events/bhote-koshi-2026/event.json", "to": "public/events/bhote-koshi-2026/event.json" },
+      { "from": "public/events/bhote-koshi-2026/pre.webp", "to": "public/events/bhote-koshi-2026/pre.webp" },
+      { "from": "public/events/bhote-koshi-2026/post.webp", "to": "public/events/bhote-koshi-2026/post.webp" },
+      { "from": "public/events/bhote-koshi-2026/README.md", "to": "public/events/bhote-koshi-2026/README.md" }
+    ]
+  },
+  "layers": [{ "id": "bhote-koshi-event", "type": "core", "note": "Imagery for the built-in Nepal event scene. The flood-path coordinates in src/data/bhoteKoshiFloodPath.js are still compiled into core (open item)." }]
+}

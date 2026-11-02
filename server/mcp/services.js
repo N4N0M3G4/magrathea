@@ -9,6 +9,8 @@ import { createToolServices } from '../../src/tools/services.js';
 
 // Bundled data some sources read by module-relative URL.
 const BUNDLED_DATA = new URL('../../src/data/local_data/', import.meta.url);
+// GEO-RECON Data Bundles, installed under public/bundles/ and served at /bundles/.
+const BUNDLE_DATA = new URL('../../public/bundles/', import.meta.url);
 
 export const DEFAULT_API_BASE = 'http://localhost:4173';
 
@@ -27,6 +29,8 @@ export function createApiFetch({
   return (input, init) => {
     const url = String(input instanceof Request ? input.url : input);
     if (url.startsWith('file:')) return readBundled(url);
+    if (url.startsWith('/bundles/'))
+      return readBundled(new URL(url.slice('/bundles/'.length), BUNDLE_DATA).href);
     return fetchImpl(
       typeof input === 'string' && input.startsWith('/')
         ? new URL(input, base)
@@ -38,7 +42,8 @@ export function createApiFetch({
 
 async function readBundled(url) {
   const href = new URL(url).href;
-  if (!href.startsWith(BUNDLED_DATA.href) || href.includes('/../'))
+  const inside = href.startsWith(BUNDLED_DATA.href) || href.startsWith(BUNDLE_DATA.href);
+  if (!inside || href.includes('/../'))
     return new Response(null, { status: 404 });
   try {
     const body = await readFile(fileURLToPath(href));

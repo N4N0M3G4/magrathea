@@ -1,0 +1,21 @@
+{
+  "id": "telegeography-submarine-cables",
+  "name": "Submarine cables (TeleGeography)",
+  "version": "upstream-0d1a681",
+  "license": "CC BY-NC-SA 3.0 (NonCommercial, ShareAlike). Not MIT.",
+  "attribution": "© TeleGeography — submarinecablemap.com",
+  "sizeBytes": 1000000,
+  "defaultInstalled": false,
+  "source": {
+    "type": "git",
+    "commit": "0d1a681",
+    "url": "https://github.com/bilawalsidhu/gods-eye-view/tree/0d1a681/src/data/local_data/telegeography_submarine_cables",
+    "files": [
+      { "from": "src/data/local_data/telegeography_submarine_cables/cable-geo.json", "to": "public/bundles/telegeography-submarine-cables/cable-geo.json" },
+      { "from": "src/data/local_data/telegeography_submarine_cables/landing-point-geo.json", "to": "public/bundles/telegeography-submarine-cables/landing-point-geo.json" },
+      { "from": "src/data/local_data/telegeography_submarine_cables/README.md", "to": "public/bundles/telegeography-submarine-cables/README.md" },
+      { "from": "src/data/local_data/telegeography_submarine_cables/source.json", "to": "public/bundles/telegeography-submarine-cables/source.json" }
+    ]
+  },
+  "layers": [{ "id": "submarine-cables", "type": "core", "note": "Feeds the built-in Submarine Cables layer. Without this bundle that layer reports its data as unavailable." }]
+}

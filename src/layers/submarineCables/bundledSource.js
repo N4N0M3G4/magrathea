@@ -2,17 +2,14 @@
 // Commercial users must remove it or obtain a TeleGeography license.
 // See DATA_SOURCES.md and the bundled dataset's source.json.
 // Resolved when read, so importing this module never needs a module URL.
+// GEO-RECON: the data now ships as the optional Data Bundle
+// "telegeography-submarine-cables" (npm run bundle -- add telegeography-submarine-cables).
+const BUNDLE_ROOT = `${import.meta.env?.BASE_URL || '/'}bundles/telegeography-submarine-cables/`;
 function cableUrl() {
-  return new URL(
-    '../../data/local_data/telegeography_submarine_cables/cable-geo.json',
-    import.meta.url,
-  ).href;
+  return `${BUNDLE_ROOT}cable-geo.json`;
 }
 function landingPointUrl() {
-  return new URL(
-    '../../data/local_data/telegeography_submarine_cables/landing-point-geo.json',
-    import.meta.url,
-  ).href;
+  return `${BUNDLE_ROOT}landing-point-geo.json`;
 }
 
 /** Supply GeoJSON collections without coupling the renderer to asset URLs. */
