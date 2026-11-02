@@ -2,8 +2,62 @@
 // `npm run bundle`) and adds only the enabled bundles' layers to the viewer.
 // A missing registry means no bundles: the core app runs unchanged.
 import * as Cesium from 'cesium';
+import { leftDock } from '../georecon/leftDock.js';
+import {
+  basemapOptions,
+  getBasemap,
+  getOpacity,
+  setBasemap,
+  setOpacity,
+} from '../georecon/layerPrefs.js';
+
+const prefs = () => {
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return null;
+  }
+};
 
 const BASE = import.meta.env?.BASE_URL || '/';
+let basemapActive = false;
+// Stack order we keep: GEV's own imagery, then our basemap, then our overlays.
+const ours = { basemap: null, overlays: [] };
+function restack(viewer) {
+  const layers = viewer.imageryLayers;
+  if (ours.basemap && layers.contains(ours.basemap))
+    layers.raiseToTop(ours.basemap);
+  for (const o of ours.overlays) if (layers.contains(o)) layers.raiseToTop(o);
+  viewer.scene.requestRender();
+}
+
+/** Show/hide plus opacity for a point data source (points and cone polygons). */
+function pointLayerHandle(viewer, ds, color, initial) {
+  let alpha = initial;
+  const apply = () => {
+    for (const e of ds.entities.values) {
+      if (e.point) {
+        e.point.outlineColor = color.withAlpha(alpha);
+        if (e.point.color?.getValue?.()?.alpha > 0)
+          e.point.color = color.withAlpha(alpha);
+      }
+      if (e.polygon) e.polygon.material = color.withAlpha(0.35 * alpha);
+    }
+    viewer.scene.requestRender();
+  };
+  ds.entities.collectionChanged.addEventListener(apply);
+  apply();
+  return {
+    set(on) {
+      ds.show = on;
+      viewer.scene.requestRender();
+    },
+    setOpacity(a) {
+      alpha = a;
+      apply();
+    },
+  };
+}
 
 async function loadRegistry() {
   try {
@@ -28,14 +82,19 @@ function addImageryXyz(viewer, layer) {
       : undefined,
   });
   const imagery = viewer.imageryLayers.addImageryProvider(provider);
-  imagery.alpha = layer.alpha ?? 0.7;
+  ours.overlays.push(imagery);
+  imagery.alpha = layer.opacity;
   // GEV hides the ellipsoid globe under photorealistic tiles; imagery drapes
   // on the globe, so showing the layer shows the globe too.
   const wasGlobe = viewer.scene.globe.show;
   return {
     set(on) {
       imagery.show = on;
-      viewer.scene.globe.show = on || wasGlobe;
+      viewer.scene.globe.show = on || wasGlobe || basemapActive;
+      viewer.scene.requestRender();
+    },
+    setOpacity(a) {
+      imagery.alpha = a;
       viewer.scene.requestRender();
     },
   };
@@ -176,12 +235,12 @@ function renderPanel(entries, home, viewer) {
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-label', 'Data bundles'); // i18n-ignore: GEO-RECON fork panel, English only
   panel.style.cssText =
-    'position:fixed;left:12px;bottom:120px;z-index:50;background:rgba(4,7,9,.88);border:1px solid #1a6f80;' +
+    'background:rgba(4,7,9,.88);border:1px solid #1a6f80;' +
     'color:#3fe0ff;font:12px ui-monospace,Menlo,monospace;padding:8px 10px;max-width:280px';
   const title = document.createElement('div');
   title.textContent = 'DATA BUNDLES'; // i18n-ignore: GEO-RECON fork panel, English only
   title.style.cssText = 'color:#ffb238;margin-bottom:4px;letter-spacing:.08em';
-  panel.append(title);
+  panel.append(title, basemapPicker(viewer));
   for (const e of entries) {
     const label = document.createElement('label');
     label.style.cssText =
@@ -196,7 +255,19 @@ function renderPanel(entries, home, viewer) {
     text.textContent = e.layer.name ?? e.layer.id;
     text.style.cssText = 'overflow:hidden;text-overflow:ellipsis';
     label.append(box, text);
-    panel.append(label);
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = String(Math.round(e.layer.opacity * 100));
+    slider.id = `gr-opacity-${e.layer.id}`;
+    slider.setAttribute('aria-label', `${e.layer.name ?? e.layer.id} opacity`);
+    slider.style.cssText = 'width:100%;accent-color:#3fe0ff;margin:0 0 4px';
+    slider.addEventListener('input', () => {
+      const a = setOpacity(prefs(), e.layer.id, Number(slider.value) / 100);
+      e.handle.setOpacity?.(a);
+    });
+    panel.append(label, slider);
   }
   if (home) {
     const go = document.createElement('button');
@@ -216,7 +287,65 @@ function renderPanel(entries, home, viewer) {
     );
     panel.append(go);
   }
-  document.body.append(panel);
+  leftDock().append(panel);
+}
+
+/** Basemap select: an imagery layer at the bottom of the stack, under every overlay. */
+function basemapPicker(viewer) {
+  const options = basemapOptions({
+    arcgisKey: import.meta.env?.VITE_ARCGIS_API_KEY,
+  });
+  const select = document.createElement('select');
+  select.id = 'gr-basemap';
+  select.setAttribute('aria-label', 'Basemap'); // i18n-ignore: GEO-RECON fork panel, English only
+  select.style.cssText =
+    'width:100%;margin:2px 0 6px;background:#040709;color:#3fe0ff;border:1px solid #1a6f80;font:inherit';
+  for (const o of options) {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.disabled = !o.available;
+    opt.textContent = o.note ? `${o.name} (${o.note})` : o.name;
+    select.append(opt);
+  }
+  let layer = null;
+  let credit = null;
+  const wasGlobe = viewer.scene.globe.show;
+  const apply = (id) => {
+    if (layer) viewer.imageryLayers.remove(layer, true);
+    ours.basemap = null;
+    if (credit) viewer.creditDisplay?.removeStaticCredit?.(credit);
+    layer = null;
+    credit = null;
+    const o = options.find((x) => x.id === id);
+    basemapActive = Boolean(o?.url);
+    if (o?.url) {
+      layer = viewer.imageryLayers.addImageryProvider(
+        new Cesium.UrlTemplateImageryProvider({
+          url: o.url,
+          maximumLevel: o.maximumLevel,
+        }),
+      );
+      ours.basemap = layer;
+      credit = new Cesium.Credit(o.credit);
+      viewer.creditDisplay?.addStaticCredit?.(credit);
+    }
+    // Draped basemaps need the ellipsoid globe; GEV's 3D tiles hide it.
+    viewer.scene.globe.show =
+      basemapActive || wasGlobe || viewer.imageryLayers.length > 1;
+    viewer.scene.requestRender();
+  };
+  // GEV may add or swap its own imagery later; keep ours above it.
+  viewer.imageryLayers.layerAdded.addEventListener((added) => {
+    if (added !== ours.basemap && !ours.overlays.includes(added))
+      restack(viewer);
+  });
+  select.value = getBasemap(prefs(), options);
+  apply(select.value);
+  select.addEventListener('change', () => {
+    setBasemap(prefs(), select.value);
+    apply(select.value);
+  });
+  return select;
 }
 
 /** Start enabled bundles on a viewer. Never throws: a bad bundle is logged and skipped. */
@@ -231,7 +360,17 @@ export async function startBundles(viewer) {
       const build = BUILDERS[layer.type];
       if (!build) continue; // 'core' layers are fed by files, nothing to add
       try {
-        entries.push({ bundle, layer, handle: await build(viewer, layer) });
+        const opacity = getOpacity(
+          prefs(),
+          layer.id,
+          layer.defaultOpacity ?? 1,
+        );
+        const resolved = { ...layer, opacity };
+        entries.push({
+          bundle,
+          layer: resolved,
+          handle: await build(viewer, resolved),
+        });
         viewer.creditDisplay?.addStaticCredit?.(
           new Cesium.Credit(bundle.attribution ?? bundle.name),
         );

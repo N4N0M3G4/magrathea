@@ -6,14 +6,18 @@
   "attribution": "Field captures: GEO-RECON",
   "sizeBytes": 0,
   "defaultInstalled": true,
-  "source": { "type": "none", "url": "local ingest service (npm run ingest)" },
+  "source": {
+    "type": "none",
+    "url": "local ingest service (npm run ingest)"
+  },
   "layers": [
     {
       "id": "field-captures",
       "type": "captures",
       "name": "My field photos",
       "index": "bundles/field-captures/index.json",
-      "color": "#FFB238"
+      "color": "#FFB238",
+      "defaultOpacity": 1.0
     }
   ]
 }

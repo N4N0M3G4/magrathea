@@ -2,6 +2,7 @@
 // GPS, persisted, drawn as a temp pin, with zoom-lock and recenter controls.
 import * as Cesium from 'cesium';
 import { createPinStore, lockedZoomRange } from './pinState.js';
+import { leftDock } from './leftDock.js';
 
 const UI = {
   cyan: '#3fe0ff',
@@ -99,7 +100,7 @@ export function startCurrentPin(viewer) {
   panel.id = 'gr-pin';
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-label', 'Current pin'); // i18n-ignore: GEO-RECON fork panel, English only
-  panel.style.cssText = `position:fixed;left:12px;bottom:245px;z-index:51;background:${UI.bg};border:1px solid ${UI.dim};color:${UI.cyan};font:${UI.font};padding:8px 10px;max-width:300px;display:flex;flex-direction:column;gap:6px`;
+  panel.style.cssText = `background:${UI.bg};border:1px solid ${UI.dim};color:${UI.cyan};font:${UI.font};padding:8px 10px;max-width:300px;display:flex;flex-direction:column;gap:6px`;
   const label = document.createElement('div');
   label.style.cssText = `color:${UI.amber};overflow:hidden;text-overflow:ellipsis;white-space:nowrap`;
   const row = document.createElement('div');
@@ -113,7 +114,7 @@ export function startCurrentPin(viewer) {
   status.style.cssText = `color:${UI.dim};min-height:1em`;
   row.append(lockBtn, recenterBtn, gpsBtn, clearBtn);
   panel.append(label, row, status);
-  document.body.append(panel);
+  leftDock().prepend(panel);
 
   const flyToPin = (pin, range = 1500) =>
     camera.flyToBoundingSphere(new Cesium.BoundingSphere(pinPosition(pin), 1), {

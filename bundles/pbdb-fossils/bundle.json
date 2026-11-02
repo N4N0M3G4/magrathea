@@ -10,7 +10,10 @@
     "type": "http",
     "url": "https://paleobiodb.org/data1.2/",
     "files": [
-      { "from": "https://paleobiodb.org/data1.2/occs/list.json?lngmin=-122.25&lngmax=-121.75&latmin=36.9&latmax=37.25&show=coords,strat,loc", "to": "public/bundles/pbdb-fossils/occurrences.json" }
+      {
+        "from": "https://paleobiodb.org/data1.2/occs/list.json?lngmin=-122.25&lngmax=-121.75&latmin=36.9&latmax=37.25&show=coords,strat,loc",
+        "to": "public/bundles/pbdb-fossils/occurrences.json"
+      }
     ]
   },
   "layers": [
@@ -19,7 +22,8 @@
       "type": "points-pbdb",
       "name": "PBDB fossil occurrences",
       "data": "bundles/pbdb-fossils/occurrences.json",
-      "color": "#3FE0FF"
+      "color": "#3FE0FF",
+      "defaultOpacity": 0.25
     }
   ]
 }

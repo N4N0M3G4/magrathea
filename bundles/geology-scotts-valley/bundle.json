@@ -36,14 +36,14 @@
       "name": "Geologic map (Macrostrat carto)",
       "url": "https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png",
       "maximumLevel": 16,
-      "alpha": 0.65,
       "rectangle": [
         -122.25,
         36.9,
         -121.75,
         37.25
       ],
-      "tileSize": 512
+      "tileSize": 512,
+      "defaultOpacity": 0.4
     }
   ]
 }
