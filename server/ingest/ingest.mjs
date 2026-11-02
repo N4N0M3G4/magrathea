@@ -2,6 +2,7 @@
 // GEO-RECON ingest service: the phone uploads geotagged photos over the LAN.
 //   PUT  /api/captures/<uuid>/photo.jpg   (Bearer token, image/jpeg body)
 //   PUT  /api/captures/<uuid>/meta.json   (Bearer token, sidecar JSON body)
+//   PUT  /api/scans/<uuid>/session.json | frames/NNNNNN.(jpg|json); POST .../complete
 //   GET  /api/ping                        (Bearer token) -> {ok:true}
 //   GET  /pair                            (loopback only) pairing QR page
 // Files land in public/bundles/field-captures/, which the hub serves.
@@ -19,9 +20,11 @@ import {
   rebuildIndex,
   storePart,
 } from './store.mjs';
+import { parseScanPath, rebuildScanIndex, storeScanPart } from './scans.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const DIR = join(ROOT, 'public', 'bundles', 'field-captures');
+const SCANS = join(ROOT, 'public', 'bundles', 'object-scans');
 const SECRET = join(ROOT, '.georecon', 'ingest.json');
 const PORT = Number.parseInt(process.env.INGEST_PORT, 10) || 4180;
 const MAX_BYTES = 40 * 1024 * 1024;
@@ -101,6 +104,19 @@ const server = createServer(async (req, res) => {
       return send(res, 401, { error: 'bad or missing token; pair again' });
     if (req.method === 'GET' && url.pathname === '/api/ping')
       return send(res, 200, { ok: true });
+    const scan = parseScanPath(url.pathname);
+    if (scan) {
+      const isComplete = scan.part === 'complete';
+      if (req.method !== (isComplete ? 'POST' : 'PUT'))
+        return send(res, 405, { error: 'method not allowed' });
+      const frames = storeScanPart(
+        SCANS,
+        scan.id,
+        scan.part,
+        isComplete ? Buffer.alloc(0) : await readBody(req),
+      );
+      return send(res, 200, { ok: true, id: scan.id, part: scan.part, frames });
+    }
     const m = /^\/api\/captures\/([^/]+)\/(photo\.jpg|meta\.json)$/.exec(
       url.pathname,
     );
@@ -118,6 +134,7 @@ const server = createServer(async (req, res) => {
 
 mkdirSync(DIR, { recursive: true });
 rebuildIndex(DIR);
+rebuildScanIndex(SCANS);
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[ingest] listening on LAN port ${PORT} (LAN addresses only)`);
   console.log(
