@@ -176,7 +176,7 @@ function renderPanel(entries, home, viewer) {
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-label', 'Data bundles'); // i18n-ignore: GEO-RECON fork panel, English only
   panel.style.cssText =
-    'position:fixed;left:12px;bottom:72px;z-index:50;background:rgba(4,7,9,.88);border:1px solid #1a6f80;' +
+    'position:fixed;left:12px;bottom:120px;z-index:50;background:rgba(4,7,9,.88);border:1px solid #1a6f80;' +
     'color:#3fe0ff;font:12px ui-monospace,Menlo,monospace;padding:8px 10px;max-width:280px';
   const title = document.createElement('div');
   title.textContent = 'DATA BUNDLES'; // i18n-ignore: GEO-RECON fork panel, English only

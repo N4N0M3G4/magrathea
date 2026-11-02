@@ -1,3 +1,4 @@
+import { announcePlace } from './georecon/currentPin.js';
 import { rangeForBoundingSphere } from './data/cameraFraming.js';
 import { isUnavailableCapability } from './sources/capability.js';
 import { createOverpassFeatureSource } from './sources/overpassFeatures.js';
@@ -345,6 +346,9 @@ export async function searchAndFlyTo(viewer, query, options = {}) {
     types = recovered.types || [];
     viewport = placesViewportToBounds(recovered.viewport) || viewport;
   } else if (!result) return null;
+  // GEO-RECON: the search result becomes the persistent current pin.
+  if (Number.isFinite(lat) && Number.isFinite(lng))
+    announcePlace(lat, lng, label);
 
   const requestedRange = finitePositive(options.range);
   const duration = finitePositive(options.duration) || 3.0;
