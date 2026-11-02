@@ -3,6 +3,8 @@
 // A missing registry means no bundles: the core app runs unchanged.
 import * as Cesium from 'cesium';
 import { leftDock } from '../georecon/leftDock.js';
+import { el, fields, link, openModal } from '../georecon/modal.js';
+import { loadFossilDetails } from '../georecon/fossilInfo.js';
 import {
   basemapOptions,
   getBasemap,
@@ -21,6 +23,8 @@ const prefs = () => {
 
 const BASE = import.meta.env?.BASE_URL || '/';
 let basemapActive = false;
+/** PBDB snapshot records grouped by collection id, for the modal's list. */
+const byCollection = new Map();
 // Stack order we keep: GEV's own imagery, then our basemap, then our overlays.
 const ours = { basemap: null, overlays: [] };
 function restack(viewer) {
@@ -107,6 +111,10 @@ async function addPbdbPoints(viewer, layer) {
   const ds = new Cesium.CustomDataSource(layer.id);
   const color = Cesium.Color.fromCssColorString(layer.color ?? '#3FE0FF');
   for (const rec of json.records ?? []) {
+    if (rec.cid)
+      (
+        byCollection.get(rec.cid) ?? byCollection.set(rec.cid, []).get(rec.cid)
+      ).push(rec);
     const lat = Number(rec.lat),
       lon = Number(rec.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
@@ -121,7 +129,12 @@ async function addPbdbPoints(viewer, layer) {
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
       name: rec.tna || 'Fossil occurrence',
-      description: `<p><b>${rec.tna ?? ''}</b></p><p>Formation: ${rec.sfm ?? 'unknown'}</p><p>PBDB ${rec.oid ?? ''}</p>`,
+      properties: {
+        grKind: 'fossil',
+        oid: rec.oid,
+        cid: rec.cid,
+        tna: rec.tna ?? '',
+      },
     });
   }
   await viewer.dataSources.add(ds);
@@ -140,10 +153,6 @@ function offset(lon, lat, deg, m) {
   const dLon =
     (m * Math.sin(r)) / (111320 * Math.cos(Cesium.Math.toRadians(lat)));
   return [lon + dLon, lat + dLat];
-}
-
-function escapeHtml(v) {
-  return String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
 async function addCaptures(viewer, layer) {
@@ -175,7 +184,7 @@ async function addCaptures(viewer, layer) {
         id: `capture-${c.id}`,
         position: Cesium.Cartesian3.fromDegrees(c.lon, c.lat),
         point: {
-          pixelSize: 11,
+          pixelSize: 14,
           color,
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
@@ -183,10 +192,11 @@ async function addCaptures(viewer, layer) {
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
         name: `Capture ${c.id.slice(0, 8)}`,
-        description:
-          `<p><img src="${BASE}${root}${escapeHtml(c.photo)}" style="max-width:100%"></p>` +
-          `<p>${escapeHtml(when)}<br>${c.lat.toFixed(5)}, ${c.lon.toFixed(5)} ±${escapeHtml(c.hAccM ?? '?')} m` +
-          `<br>Heading ${escapeHtml(c.headingDeg ?? '?')}°</p>`,
+        properties: {
+          grKind: 'capture',
+          capture: c,
+          photoUrl: `${BASE}${root}${c.photo}`,
+        },
       });
       if (Number.isFinite(c.headingDeg)) {
         // Heading cone: two 25 m rays at ±20° around the camera heading.
@@ -348,6 +358,180 @@ function basemapPicker(viewer) {
   return select;
 }
 
+function showCapture(props) {
+  const c = props.capture;
+  const body = openModal(`FIELD PHOTO ${c.id.slice(0, 8)}`);
+  body.append(
+    el('img', {
+      src: props.photoUrl,
+      alt: `Field photo ${c.id.slice(0, 8)}`,
+      style: 'max-width:100%;display:block;margin-bottom:8px',
+    }),
+    fields([
+      [
+        'Taken',
+        c.timestampMs ? new Date(c.timestampMs).toLocaleString() : 'unknown',
+      ],
+      ['Position', `${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}`],
+      ['Accuracy', c.hAccM != null ? `±${Math.round(c.hAccM)} m` : 'unknown'],
+      ['Altitude', c.altM != null ? `${Math.round(c.altM)} m` : 'unknown'],
+      [
+        'Heading',
+        c.headingDeg != null ? `${Math.round(c.headingDeg)}°` : 'unknown',
+      ],
+      [
+        'Pitch / roll',
+        c.pitchDeg != null
+          ? `${Math.round(c.pitchDeg)}° / ${Math.round(c.rollDeg ?? 0)}°`
+          : '',
+      ],
+    ]),
+  );
+}
+
+async function showFossil(props) {
+  const body = openModal(`FOSSIL · ${props.tna || 'occurrence'}`);
+  const status = el(
+    'div',
+    { role: 'status', style: 'color:#1a9fb8' },
+    'Loading PBDB record…',
+  ); // i18n-ignore: GEO-RECON fork panel, English only
+  body.append(status);
+  const siblings = byCollection.get(props.cid) ?? [];
+  try {
+    const d = await loadFossilDetails(props.oid, BASE);
+    status.remove();
+    const head = el('div', {
+      style: 'display:flex;gap:10px;align-items:flex-start;margin-bottom:8px',
+    });
+    if (d.silhouette?.src)
+      head.append(
+        el('img', {
+          src: d.silhouette.src,
+          alt: `${d.taxon} silhouette`,
+          style:
+            'width:96px;height:72px;object-fit:contain;filter:invert(1) sepia(1) hue-rotate(150deg) saturate(4)',
+        }),
+      );
+    head.append(
+      el(
+        'div',
+        {},
+        el('div', { style: 'color:#ffb238;font-size:14px' }, d.taxon),
+        el('div', {}, [d.rank, d.group].filter(Boolean).join(' · ')),
+        el('div', { style: 'color:#1a9fb8;overflow-wrap:anywhere' }, d.lineage),
+      ),
+    );
+    body.append(
+      head,
+      fields([
+        ['Identified as', d.identifiedAs],
+        ['Age', d.age],
+        ['Formation', d.formation],
+        ['Lithology', d.lithology],
+        ['Environment', d.environment],
+        ['Collection', d.collection],
+        ['Place', d.place],
+        ['Location precision', d.precision],
+        ['Reference', d.reference],
+      ]),
+      el(
+        'div',
+        { style: 'display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px' },
+        link(d.occUrl, 'PBDB occurrence ↗'),
+        link(d.pbdbUrl, 'PBDB collection ↗'),
+      ),
+    );
+    if (d.silhouette)
+      body.append(
+        el(
+          'div',
+          { style: 'color:#1a9fb8;font-size:11px' },
+          'Silhouette: ',
+          link(d.silhouette.link, `PhyloPic · ${d.silhouette.credit}`),
+          ` · ${d.silhouette.license.replace('https://creativecommons.org/', 'CC ')}`,
+        ),
+      );
+    if (d.images.length) {
+      const grid = el('div', {
+        style:
+          'display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin:8px 0',
+      });
+      for (const img of d.images) {
+        const fig = el(
+          'figure',
+          { style: 'margin:0' },
+          el('img', {
+            src: img.src,
+            alt: `${d.taxon} specimen`,
+            loading: 'lazy',
+            style:
+              'width:100%;height:90px;object-fit:cover;border:1px solid #1a6f80',
+          }),
+          el(
+            'figcaption',
+            { style: 'font-size:10px;color:#1a9fb8;overflow-wrap:anywhere' },
+            link(img.link, img.credit),
+            ` · ${img.license}`,
+            img.where ? ` · ${img.where}` : '',
+          ),
+        );
+        // Some hosts refuse hotlinking: drop the tile instead of a broken image.
+        fig.querySelector('img').addEventListener('error', () => fig.remove());
+        grid.append(fig);
+      }
+      body.append(
+        el(
+          'div',
+          { style: 'color:#ffb238;margin-top:8px' },
+          'SPECIMEN PHOTOS (GBIF)',
+        ),
+        grid,
+      ); // i18n-ignore: GEO-RECON fork panel, English only
+    }
+  } catch (e) {
+    status.textContent = `Could not load details: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
+  }
+  if (siblings.length > 1) {
+    const list = el('ul', { style: 'margin:4px 0 0;padding-left:18px' });
+    for (const r of siblings) {
+      const b = el(
+        'button',
+        {
+          type: 'button',
+          style:
+            'background:none;border:none;color:#3fe0ff;font:inherit;cursor:pointer;padding:0;text-align:left',
+        },
+        r.tna || r.oid,
+      );
+      b.addEventListener('click', () =>
+        showFossil({ grKind: 'fossil', oid: r.oid, cid: r.cid, tna: r.tna }),
+      );
+      list.append(el('li', {}, b));
+    }
+    body.append(
+      el(
+        'div',
+        { style: 'color:#ffb238;margin-top:8px' },
+        `${siblings.length} OCCURRENCES IN THIS COLLECTION`,
+      ),
+      list,
+    ); // i18n-ignore: GEO-RECON fork panel, English only
+  }
+}
+
+/** Click a bundle feature to open its detail modal (GEV turns off Cesium's InfoBox). */
+function installPicking(viewer) {
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction((click) => {
+    for (const picked of viewer.scene.drillPick(click.position, 5)) {
+      const props = picked?.id?.properties?.getValue?.(Cesium.JulianDate.now());
+      if (props?.grKind === 'fossil') return void showFossil(props);
+      if (props?.grKind === 'capture') return void showCapture(props);
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
 /** Start enabled bundles on a viewer. Never throws: a bad bundle is logged and skipped. */
 export async function startBundles(viewer) {
   const { bundles = [] } = await loadRegistry();
@@ -379,5 +563,9 @@ export async function startBundles(viewer) {
       }
     }
   }
-  if (entries.length) renderPanel(entries, home, viewer);
+  if (entries.length) {
+    renderPanel(entries, home, viewer);
+    installPicking(viewer);
+    globalThis.__georecon = { viewer, Cesium }; // debugging and headless checks
+  }
 }
