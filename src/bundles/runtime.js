@@ -7,7 +7,9 @@ const BASE = import.meta.env?.BASE_URL || '/';
 
 async function loadRegistry() {
   try {
-    const r = await fetch(`${BASE}bundles/registry.json`, { cache: 'no-cache' });
+    const r = await fetch(`${BASE}bundles/registry.json`, {
+      cache: 'no-cache',
+    });
     return r.ok ? await r.json() : { bundles: [] };
   } catch {
     return { bundles: [] };
@@ -18,7 +20,9 @@ function addImageryXyz(viewer, layer) {
   const provider = new Cesium.UrlTemplateImageryProvider({
     url: layer.url,
     maximumLevel: layer.maximumLevel ?? 18,
-    rectangle: layer.rectangle ? Cesium.Rectangle.fromDegrees(...layer.rectangle) : undefined,
+    rectangle: layer.rectangle
+      ? Cesium.Rectangle.fromDegrees(...layer.rectangle)
+      : undefined,
   });
   const imagery = viewer.imageryLayers.addImageryProvider(provider);
   imagery.alpha = layer.alpha ?? 0.7;
@@ -41,12 +45,16 @@ async function addPbdbPoints(viewer, layer) {
   const ds = new Cesium.CustomDataSource(layer.id);
   const color = Cesium.Color.fromCssColorString(layer.color ?? '#3FE0FF');
   for (const rec of json.records ?? []) {
-    const lat = Number(rec.lat), lon = Number(rec.lng);
+    const lat = Number(rec.lat),
+      lon = Number(rec.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
     ds.entities.add({
       position: Cesium.Cartesian3.fromDegrees(lon, lat),
       point: {
-        pixelSize: 9, color: Cesium.Color.TRANSPARENT, outlineColor: color, outlineWidth: 2,
+        pixelSize: 9,
+        color: Cesium.Color.TRANSPARENT,
+        outlineColor: color,
+        outlineWidth: 2,
         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
@@ -55,7 +63,12 @@ async function addPbdbPoints(viewer, layer) {
     });
   }
   await viewer.dataSources.add(ds);
-  return { set(on) { ds.show = on; viewer.scene.requestRender(); } };
+  return {
+    set(on) {
+      ds.show = on;
+      viewer.scene.requestRender();
+    },
+  };
 }
 
 const BUILDERS = { 'imagery-xyz': addImageryXyz, 'points-pbdb': addPbdbPoints };
@@ -74,7 +87,8 @@ function renderPanel(entries, home, viewer) {
   panel.append(title);
   for (const e of entries) {
     const label = document.createElement('label');
-    label.style.cssText = 'display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    label.style.cssText =
+      'display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
     label.title = `${e.bundle.name} · ${e.bundle.license}`;
     const box = document.createElement('input');
     box.type = 'checkbox';
@@ -91,9 +105,17 @@ function renderPanel(entries, home, viewer) {
     const go = document.createElement('button');
     go.type = 'button';
     go.textContent = `FLY TO ${home.label.toUpperCase()}`; // i18n-ignore: GEO-RECON fork panel, English only
-    go.style.cssText = 'margin-top:6px;background:none;border:1px solid #3fe0ff;color:#3fe0ff;font:inherit;cursor:pointer;padding:2px 6px';
+    go.style.cssText =
+      'margin-top:6px;background:none;border:1px solid #3fe0ff;color:#3fe0ff;font:inherit;cursor:pointer;padding:2px 6px';
     go.addEventListener('click', () =>
-      viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(home.lon, home.lat - 0.03, 4500), orientation: { pitch: Cesium.Math.toRadians(-35) } }),
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          home.lon,
+          home.lat - 0.03,
+          4500,
+        ),
+        orientation: { pitch: Cesium.Math.toRadians(-35) },
+      }),
     );
     panel.append(go);
   }
@@ -113,7 +135,9 @@ export async function startBundles(viewer) {
       if (!build) continue; // 'core' layers are fed by files, nothing to add
       try {
         entries.push({ bundle, layer, handle: await build(viewer, layer) });
-        viewer.creditDisplay?.addStaticCredit?.(new Cesium.Credit(bundle.attribution ?? bundle.name));
+        viewer.creditDisplay?.addStaticCredit?.(
+          new Cesium.Credit(bundle.attribution ?? bundle.name),
+        );
       } catch (error) {
         console.warn(`[bundles] ${bundle.id}/${layer.id} failed:`, error);
       }
