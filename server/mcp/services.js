@@ -30,7 +30,9 @@ export function createApiFetch({
     const url = String(input instanceof Request ? input.url : input);
     if (url.startsWith('file:')) return readBundled(url);
     if (url.startsWith('/bundles/'))
-      return readBundled(new URL(url.slice('/bundles/'.length), BUNDLE_DATA).href);
+      return readBundled(
+        new URL(url.slice('/bundles/'.length), BUNDLE_DATA).href,
+      );
     return fetchImpl(
       typeof input === 'string' && input.startsWith('/')
         ? new URL(input, base)
@@ -42,7 +44,8 @@ export function createApiFetch({
 
 async function readBundled(url) {
   const href = new URL(url).href;
-  const inside = href.startsWith(BUNDLED_DATA.href) || href.startsWith(BUNDLE_DATA.href);
+  const inside =
+    href.startsWith(BUNDLED_DATA.href) || href.startsWith(BUNDLE_DATA.href);
   if (!inside || href.includes('/../'))
     return new Response(null, { status: 404 });
   try {
