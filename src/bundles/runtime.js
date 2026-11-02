@@ -5,6 +5,7 @@ import * as Cesium from 'cesium';
 import { leftDock } from '../georecon/leftDock.js';
 import { el, fields, link, openModal } from '../georecon/modal.js';
 import { loadFossilDetails } from '../georecon/fossilInfo.js';
+import { loadUnitAt, loadWikiSummary } from '../georecon/geoUnit.js';
 import {
   basemapOptions,
   getBasemap,
@@ -442,6 +443,20 @@ async function showFossil(props) {
         link(d.pbdbUrl, 'PBDB collection ↗'),
       ),
     );
+    const wikiBox = el('div', { style: 'margin:4px 0 8px' });
+    body.append(wikiBox);
+    loadWikiSummary(d.taxon).then((w) => {
+      if (!w) return;
+      wikiBox.append(
+        el('div', { style: 'overflow-wrap:anywhere' }, w.extract),
+        el(
+          'div',
+          { style: 'color:#1a9fb8;font-size:11px' },
+          link(w.url, `Wikipedia: ${w.title}`),
+          ' · CC BY-SA 4.0',
+        ),
+      );
+    });
     if (d.silhouette)
       body.append(
         el(
@@ -521,7 +536,7 @@ async function showFossil(props) {
 }
 
 /** Click a bundle feature to open its detail modal (GEV turns off Cesium's InfoBox). */
-function installPicking(viewer) {
+function installPicking(viewer, geologyShown) {
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   handler.setInputAction((click) => {
     for (const picked of viewer.scene.drillPick(click.position, 5)) {
@@ -529,7 +544,115 @@ function installPicking(viewer) {
       if (props?.grKind === 'fossil') return void showFossil(props);
       if (props?.grKind === 'capture') return void showCapture(props);
     }
+    // Nothing picked: with the geology layer on, describe the unit under the click.
+    if (!geologyShown()) return;
+    const scene = viewer.scene;
+    const cart =
+      (scene.pickPositionSupported && scene.pickPosition(click.position)) ||
+      viewer.camera.pickEllipsoid(click.position, scene.globe.ellipsoid);
+    if (!cart) return;
+    const c = Cesium.Cartographic.fromCartesian(cart);
+    showUnit(
+      Cesium.Math.toDegrees(c.latitude),
+      Cesium.Math.toDegrees(c.longitude),
+    );
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+async function showUnit(lat, lon) {
+  const body = openModal('GEOLOGIC UNIT'); // i18n-ignore: GEO-RECON fork panel, English only
+  const status = el(
+    'div',
+    { role: 'status', style: 'color:#1a9fb8' },
+    'Asking Macrostrat…',
+  ); // i18n-ignore: GEO-RECON fork panel, English only
+  body.append(status);
+  try {
+    const u = await loadUnitAt(lat, lon);
+    status.remove();
+    if (!u) return void body.append('No mapped unit here.'); // i18n-ignore: GEO-RECON fork panel, English only
+    body.append(
+      el(
+        'div',
+        { style: 'display:flex;gap:8px;align-items:center;margin-bottom:6px' },
+        el('span', {
+          style: `display:inline-block;width:18px;height:18px;border:1px solid #bfefff;background:${u.color}`,
+        }),
+        el('span', { style: 'color:#ffb238;font-size:14px' }, u.name),
+      ),
+      fields([
+        ['Stratigraphic name', u.strat],
+        ['Age', u.age],
+        ['Lithology', u.lith],
+        ['Description', u.description],
+        ['Point', `${lat.toFixed(5)}, ${lon.toFixed(5)}`],
+        ['Map scale', u.scale],
+      ]),
+      el(
+        'div',
+        { style: 'color:#1a9fb8;font-size:11px' },
+        link(
+          `https://macrostrat.org/map/loc/${lon.toFixed(4)}/${lat.toFixed(4)}`,
+          'Macrostrat ↗',
+        ),
+        ` · source ${u.sourceId} · CC BY 4.0`,
+      ),
+    );
+  } catch (e) {
+    status.textContent = `Could not reach Macrostrat: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
+  }
+}
+
+/** Collapsible legend for every GEO-RECON symbol. */
+function renderLegend() {
+  const swatch = (css) =>
+    el('span', {
+      style: `display:inline-block;width:14px;height:14px;flex:none;${css}`,
+    });
+  const row = (sw, text) =>
+    el(
+      'div',
+      { style: 'display:flex;gap:8px;align-items:center;margin:3px 0' },
+      sw,
+      el('span', {}, text),
+    );
+  const details = el(
+    'details',
+    {
+      style:
+        'background:rgba(4,7,9,.88);border:1px solid #1a6f80;color:#3fe0ff;font:12px ui-monospace,Menlo,monospace;padding:6px 10px',
+    },
+    el(
+      'summary',
+      { style: 'color:#ffb238;cursor:pointer;letter-spacing:.08em' },
+      'LEGEND',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+    row(
+      swatch(
+        'background:linear-gradient(90deg,#ffff00,#f4a460,#9acd32,#87ceeb)',
+      ),
+      'Geology: each color is one map unit (rock formation). Click a unit for its name, age and rock type.',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+    row(
+      swatch('border:2px solid #3fe0ff;border-radius:50%'),
+      'Fossil occurrence (PBDB). Click for details and pictures.',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+    row(
+      swatch('background:#ffb238;border:2px solid #000;border-radius:50%'),
+      'Your field photo. Click to view.',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+    row(
+      swatch(
+        'background:rgba(255,178,56,.35);clip-path:polygon(50% 100%,0 0,100% 0)',
+      ),
+      'Heading cone: which way the camera faced.',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+    row(
+      swatch('background:#ffb238;border:3px solid #000;border-radius:50%'),
+      'Current pin (search or MY GPS).',
+    ), // i18n-ignore: GEO-RECON fork panel, English only
+  );
+  leftDock().append(details);
 }
 
 /** Start enabled bundles on a viewer. Never throws: a bad bundle is logged and skipped. */
@@ -565,7 +688,13 @@ export async function startBundles(viewer) {
   }
   if (entries.length) {
     renderPanel(entries, home, viewer);
-    installPicking(viewer);
+    renderLegend();
+    const geo = entries.find((e) => e.layer.type === 'imagery-xyz');
+    installPicking(viewer, () =>
+      Boolean(
+        geo && document.getElementById(`gr-bundle-${geo.layer.id}`)?.checked,
+      ),
+    );
     globalThis.__georecon = { viewer, Cesium }; // debugging and headless checks
   }
 }
