@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import test from 'node:test';
+import baseTest from 'node:test';
+import { bundleInstalled, gateOnBundle } from './../../bundles/testing.mjs';
+
+// GEO-RECON: needs the optional Nepal event pack bundle.
+const test = gateOnBundle(baseTest, 'bhote-koshi-event-pack');
 import { composeCatalog, coreTools } from '../index.js';
 import { createEventPackSource } from '../../sources/eventPacks.js';
 
@@ -8,7 +12,9 @@ const EVENT_URL = new URL(
   '../../../public/events/bhote-koshi-2026/event.json',
   import.meta.url,
 );
-const bundled = JSON.parse(await readFile(EVENT_URL, 'utf8'));
+const bundled = bundleInstalled('bhote-koshi-event-pack')
+  ? JSON.parse(await readFile(EVENT_URL, 'utf8'))
+  : null;
 
 test('the event pack source reads each event once and checks the id', async () => {
   const requested = [];

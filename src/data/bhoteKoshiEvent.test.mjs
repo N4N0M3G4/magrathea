@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import test from 'node:test';
+import baseTest from 'node:test';
+import { gateOnBundle } from './../bundles/testing.mjs';
+
+// GEO-RECON: needs the optional Nepal event pack bundle.
+const test = gateOnBundle(baseTest, 'bhote-koshi-event-pack');
 import { claimPointer, releasePointer } from './inputOwnership.js';
 import * as Cesium from 'cesium';
 import { SOURCE_PATH_BEAT_IDS } from './bhoteKoshiShotPaths.js';

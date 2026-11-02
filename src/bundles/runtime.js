@@ -71,7 +71,101 @@ async function addPbdbPoints(viewer, layer) {
   };
 }
 
-const BUILDERS = { 'imagery-xyz': addImageryXyz, 'points-pbdb': addPbdbPoints };
+/** Destination point `m` metres from lon/lat along bearing `deg` (flat-earth, fine for <1 km). */
+function offset(lon, lat, deg, m) {
+  const r = Cesium.Math.toRadians(deg);
+  const dLat = (m * Math.cos(r)) / 111320;
+  const dLon =
+    (m * Math.sin(r)) / (111320 * Math.cos(Cesium.Math.toRadians(lat)));
+  return [lon + dLon, lat + dLat];
+}
+
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+async function addCaptures(viewer, layer) {
+  const ds = new Cesium.CustomDataSource(layer.id);
+  const color = Cesium.Color.fromCssColorString(layer.color ?? '#FFB238');
+  const root = layer.index.replace(/[^/]*$/, '');
+  let seen = '';
+  async function refresh() {
+    let json;
+    try {
+      const r = await fetch(`${BASE}${layer.index}`, { cache: 'no-cache' });
+      if (!r.ok) return;
+      json = await r.json();
+    } catch {
+      return; // no captures yet, or not valid JSON (SPA fallback)
+    }
+    const caps = (json.captures ?? []).filter(
+      (c) => Number.isFinite(c.lat) && Number.isFinite(c.lon),
+    );
+    const key = caps.map((c) => `${c.id}:${c.headingDeg}`).join(',');
+    if (key === seen) return;
+    seen = key;
+    ds.entities.removeAll();
+    for (const c of caps) {
+      const when = c.timestampMs
+        ? new Date(c.timestampMs).toISOString()
+        : 'unknown time';
+      ds.entities.add({
+        id: `capture-${c.id}`,
+        position: Cesium.Cartesian3.fromDegrees(c.lon, c.lat),
+        point: {
+          pixelSize: 11,
+          color,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+        name: `Capture ${c.id.slice(0, 8)}`,
+        description:
+          `<p><img src="${BASE}${root}${escapeHtml(c.photo)}" style="max-width:100%"></p>` +
+          `<p>${escapeHtml(when)}<br>${c.lat.toFixed(5)}, ${c.lon.toFixed(5)} ±${escapeHtml(c.hAccM ?? '?')} m` +
+          `<br>Heading ${escapeHtml(c.headingDeg ?? '?')}°</p>`,
+      });
+      if (Number.isFinite(c.headingDeg)) {
+        // Heading cone: two 25 m rays at ±20° around the camera heading.
+        const left = offset(c.lon, c.lat, c.headingDeg - 20, 25);
+        const right = offset(c.lon, c.lat, c.headingDeg + 20, 25);
+        ds.entities.add({
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray([
+              c.lon,
+              c.lat,
+              ...left,
+              ...right,
+            ]),
+            material: color.withAlpha(0.35),
+            outline: false,
+            classificationType: Cesium.ClassificationType.BOTH,
+          },
+        });
+      }
+    }
+    viewer.scene.requestRender();
+  }
+  await refresh();
+  const timer = setInterval(refresh, 10_000);
+  viewer.scene.preRender.addEventListener(function stop() {
+    if (viewer.isDestroyed?.()) clearInterval(timer);
+  });
+  await viewer.dataSources.add(ds);
+  return {
+    set(on) {
+      ds.show = on;
+      viewer.scene.requestRender();
+    },
+  };
+}
+
+const BUILDERS = {
+  'imagery-xyz': addImageryXyz,
+  'points-pbdb': addPbdbPoints,
+  captures: addCaptures,
+};
 
 function renderPanel(entries, home, viewer) {
   const panel = document.createElement('div');

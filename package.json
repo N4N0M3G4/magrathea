@@ -45,6 +45,7 @@
     "opensky:import": "./scripts/opensky-import-client.sh",
     "build": "vite build",
     "bundle": "node scripts/bundle.mjs",
+    "ingest": "node server/ingest/ingest.mjs",
     "build:panel": "node scripts/build-panel.mjs",
     "preview": "vite preview",
     "test": "node scripts/run-unit-tests.mjs",

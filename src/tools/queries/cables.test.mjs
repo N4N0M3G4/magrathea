@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { needsBundle } from '../../bundles/testing.mjs';
 import { composeCatalog, coreTools } from '../index.js';
 import { createApiFetch } from '../../../server/mcp/services.js';
 import { createBundledCableSource } from '../../layers/submarineCables/bundledSource.js';
@@ -89,22 +90,27 @@ test('cables are found by area and name, with landing points and attribution', a
   );
 });
 
-test('the local fetch serves bundled data files and nothing outside them', async () => {
-  const fetchImpl = createApiFetch({
-    apiBase: 'http://127.0.0.1:1',
-    fetchImpl: async () => assert.fail('no network'),
-  });
-  const { cables: collection, landingPoints } = await createBundledCableSource({
-    fetchImpl,
-  }).fetch();
-  assert.ok(collection.features.length > 500);
-  assert.ok(landingPoints.features.length > 1000);
-  const outside = await fetchImpl(
-    new URL('../../../package.json', import.meta.url).href,
-  );
-  assert.equal(outside.status, 404);
-  const missing = await fetchImpl(
-    new URL('../../data/local_data/missing.json', import.meta.url).href,
-  );
-  assert.equal(missing.status, 404);
-});
+test(
+  'the local fetch serves bundled data files and nothing outside them',
+  needsBundle('telegeography-submarine-cables'),
+  async () => {
+    const fetchImpl = createApiFetch({
+      apiBase: 'http://127.0.0.1:1',
+      fetchImpl: async () => assert.fail('no network'),
+    });
+    const { cables: collection, landingPoints } =
+      await createBundledCableSource({
+        fetchImpl,
+      }).fetch();
+    assert.ok(collection.features.length > 500);
+    assert.ok(landingPoints.features.length > 1000);
+    const outside = await fetchImpl(
+      new URL('../../../package.json', import.meta.url).href,
+    );
+    assert.equal(outside.status, 404);
+    const missing = await fetchImpl(
+      new URL('../../data/local_data/missing.json', import.meta.url).href,
+    );
+    assert.equal(missing.status, 404);
+  },
+);

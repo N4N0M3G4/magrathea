@@ -1,4 +1,8 @@
-import test from 'node:test';
+import baseTest from 'node:test';
+import { gateOnBundle } from './../bundles/testing.mjs';
+
+// GEO-RECON: needs the optional Nepal event pack bundle.
+const test = gateOnBundle(baseTest, 'bhote-koshi-event-pack');
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 

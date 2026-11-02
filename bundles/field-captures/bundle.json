@@ -1,0 +1,19 @@
+{
+  "id": "field-captures",
+  "name": "Field captures (uploaded from the GEO-RECON phone app)",
+  "version": "1",
+  "license": "Your own photos",
+  "attribution": "Field captures: GEO-RECON",
+  "sizeBytes": 0,
+  "defaultInstalled": true,
+  "source": { "type": "none", "url": "local ingest service (npm run ingest)" },
+  "layers": [
+    {
+      "id": "field-captures",
+      "type": "captures",
+      "name": "My field photos",
+      "index": "bundles/field-captures/index.json",
+      "color": "#FFB238"
+    }
+  ]
+}

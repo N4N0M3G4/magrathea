@@ -33,3 +33,4 @@ changelog.d/.assembling/
 /public/bundles/
 /public/events/bhote-koshi-2026/
 /bundles/state.json
+/.georecon/

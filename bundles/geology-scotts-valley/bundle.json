@@ -4,10 +4,31 @@
   "version": "1",
   "license": "CC BY 4.0 (Macrostrat). Underlying map: USGS OF 97-489 (Brabb 1997), public domain.",
   "attribution": "Geology: Macrostrat (CC BY 4.0), USGS",
-  "sizeBytes": 2000,
+  "sizeBytes": 15000000,
   "defaultInstalled": true,
-  "source": { "type": "none", "url": "https://macrostrat.org/api/v2/" },
-  "home": { "lat": 37.0566, "lon": -122.0013, "label": "Belair Dr find site" },
+  "source": {
+    "type": "none",
+    "url": "https://macrostrat.org/api/v2/",
+    "tiles": {
+      "layer": "macrostrat-carto",
+      "url": "https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png",
+      "rectangle": [
+        -122.25,
+        36.9,
+        -121.75,
+        37.25
+      ],
+      "minZoom": 6,
+      "maxZoom": 14,
+      "maxTiles": 2000,
+      "to": "public/bundles/geology-scotts-valley/tiles"
+    }
+  },
+  "home": {
+    "lat": 37.0566,
+    "lon": -122.0013,
+    "label": "Belair Dr find site"
+  },
   "layers": [
     {
       "id": "macrostrat-carto",
@@ -16,7 +37,12 @@
       "url": "https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png",
       "maximumLevel": 16,
       "alpha": 0.65,
-      "rectangle": [-122.25, 36.9, -121.75, 37.25]
+      "rectangle": [
+        -122.25,
+        36.9,
+        -121.75,
+        37.25
+      ]
     }
   ]
 }

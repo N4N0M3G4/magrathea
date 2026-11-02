@@ -1,10 +1,14 @@
-import test from 'node:test';
+import baseTest from 'node:test';
+import { bundleInstalled, gateOnBundle } from './../bundles/testing.mjs';
+
+// GEO-RECON: needs the optional Nepal event pack bundle.
+const test = gateOnBundle(baseTest, 'bhote-koshi-event-pack');
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { buildSourceShotPaths, SOURCE_PATH_BEAT_IDS } from './bhoteKoshiShotPaths.js';
 import { BHOTE_KOSHI_FLOOD_PATH } from './bhoteKoshiFloodPath.js';
 
-const event = JSON.parse(await readFile(new URL('../../public/events/bhote-koshi-2026/event.json', import.meta.url)));
+const event = bundleInstalled('bhote-koshi-event-pack') ? JSON.parse(await readFile(new URL('../../public/events/bhote-koshi-2026/event.json', import.meta.url))) : null;
 
 test('overview and evidence paths start at the lake reach, never the earlier trigger reach', () => {
   const lakeStart = [85.48476, 28.33255];

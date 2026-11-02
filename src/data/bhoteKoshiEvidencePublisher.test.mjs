@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import test from 'node:test';
+import baseTest from 'node:test';
+import { gateOnBundle } from './../bundles/testing.mjs';
+
+// GEO-RECON: needs the optional Nepal event pack bundle.
+const test = gateOnBundle(baseTest, 'bhote-koshi-event-pack');
 
 // The publisher on the evidence frame ("YouTube source") is pack text shown
 // in the UI language; English stays "YOUTUBE SOURCE / OPEN".

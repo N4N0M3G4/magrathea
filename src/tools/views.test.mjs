@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { needsBundle } from '../bundles/testing.mjs';
 import { composeCatalog, coreTools } from './index.js';
 import { viewFromParams } from '../view/index.js';
 import { cameraForArea, cameraLookingAt, suggestView } from './views.js';
@@ -67,39 +68,43 @@ test('answers carry the view that shows them', async () => {
   assert.deepEqual(found.data.view.layers, ['flights']);
 });
 
-test('the flood and the brief frame what they describe', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const bundled = JSON.parse(
-    await readFile(
-      new URL(
-        '../../public/events/bhote-koshi-2026/event.json',
-        import.meta.url,
+test(
+  'the flood and the brief frame what they describe',
+  needsBundle('bhote-koshi-event-pack'),
+  async () => {
+    const { readFile } = await import('node:fs/promises');
+    const bundled = JSON.parse(
+      await readFile(
+        new URL(
+          '../../public/events/bhote-koshi-2026/event.json',
+          import.meta.url,
+        ),
+        'utf8',
       ),
-      'utf8',
-    ),
-  );
-  const flood = await composeCatalog({
-    tools: coreTools,
-    services: { app, events: { getEvent: async () => bundled } },
-  }).call('get_bhote_koshi_flood', {});
-  assert.deepEqual(flood.data.view.layers, ['bhote-koshi-2026']);
-  assert.ok(Math.abs(flood.data.view.camera.lat - 28.13) < 0.2);
-  assert.ok(Math.abs(flood.data.view.camera.lon - 85.32) < 0.2);
-  const brief = await composeCatalog({
-    tools: coreTools,
-    services: {
-      app,
-      weather: {
-        getConditions: async () => ({ status: 'ready', weather: {} }),
+    );
+    const flood = await composeCatalog({
+      tools: coreTools,
+      services: { app, events: { getEvent: async () => bundled } },
+    }).call('get_bhote_koshi_flood', {});
+    assert.deepEqual(flood.data.view.layers, ['bhote-koshi-2026']);
+    assert.ok(Math.abs(flood.data.view.camera.lat - 28.13) < 0.2);
+    assert.ok(Math.abs(flood.data.view.camera.lon - 85.32) < 0.2);
+    const brief = await composeCatalog({
+      tools: coreTools,
+      services: {
+        app,
+        weather: {
+          getConditions: async () => ({ status: 'ready', weather: {} }),
+        },
+        aircraft: feed([]),
+        earthquakes: { getSnapshot: async () => [] },
       },
-      aircraft: feed([]),
-      earthquakes: { getSnapshot: async () => [] },
-    },
-  }).call('situation_brief', {
-    area: { lat: 30, lon: -97, radius_km: 50 },
-  });
-  assert.deepEqual(brief.data.view.layers, ['earthquakes', 'flights']);
-});
+    }).call('situation_brief', {
+      area: { lat: 30, lon: -97, radius_km: 50 },
+    });
+    assert.deepEqual(brief.data.view.layers, ['earthquakes', 'flights']);
+  },
+);
 
 test('a tilted camera sits behind the point it looks at', () => {
   const target = { lat: 25, lon: 121 };
