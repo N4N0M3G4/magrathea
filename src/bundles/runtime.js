@@ -20,6 +20,9 @@ function addImageryXyz(viewer, layer) {
   const provider = new Cesium.UrlTemplateImageryProvider({
     url: layer.url,
     maximumLevel: layer.maximumLevel ?? 18,
+    // Macrostrat serves 512 px tiles; Cesium assumes 256 unless told.
+    tileWidth: layer.tileSize ?? 256,
+    tileHeight: layer.tileSize ?? 256,
     rectangle: layer.rectangle
       ? Cesium.Rectangle.fromDegrees(...layer.rectangle)
       : undefined,
