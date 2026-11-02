@@ -46,3 +46,25 @@ test('licenses are shortened for captions', () => {
   assert.equal(shortLicense('https://creativecommons.org/publicdomain/zero/1.0/'), 'CC0');
   assert.equal(shortLicense(''), 'license unknown');
 });
+
+import { idigbioImages, smithsonianImages } from './fossilInfo.js';
+
+test('iDigBio media keep https, one per record, with license', () => {
+  const imgs = idigbioImages([
+    { indexTerms: { accessuri: 'https://si/1.jpg', records: ['r1'], rights: 'CC0' }, data: { 'dc:creator': 'NMNH' } },
+    { indexTerms: { accessuri: 'https://si/2.jpg', records: ['r1'], rights: 'CC0' }, data: {} },
+    { indexTerms: { accessuri: 'http://insecure/3.jpg', records: ['r3'] }, data: {} },
+  ]);
+  assert.equal(imgs.length, 1);
+  assert.equal(imgs[0].credit, 'NMNH');
+  assert.equal(imgs[0].license, 'CC0');
+  assert.match(imgs[0].link, /records\/r1$/);
+});
+
+test('Smithsonian rows yield image, credit and record link', () => {
+  const imgs = smithsonianImages([
+    { title: 'Patinopecten', content: { descriptiveNonRepeating: { data_source: 'NMNH - Paleobiology', record_link: 'https://n2t.net/x', online_media: { media: [{ type: 'Images', thumbnail: 'https://ids.si.edu/t.jpg', usage: { access: 'CC0' } }] } } } },
+    { content: {} },
+  ]);
+  assert.deepEqual(imgs.map((i) => [i.credit, i.license]), [['NMNH - Paleobiology', 'CC0']]);
+});

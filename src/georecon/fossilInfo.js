@@ -161,3 +161,90 @@ export function loadFossilDetails(oid, base = '/') {
     );
   return cache.get(id);
 }
+
+/** iDigBio media items -> pictures (https only, one per specimen record). */
+export function idigbioImages(items, n = 4) {
+  const out = [];
+  const seen = new Set();
+  for (const it of items ?? []) {
+    const t = it.indexTerms ?? {};
+    const d = it.data ?? {};
+    const src = t.accessuri ?? d['ac:accessURI'];
+    const rec = t.records?.[0];
+    if (!src?.startsWith('https://') || seen.has(rec)) continue;
+    seen.add(rec);
+    out.push({
+      src,
+      credit:
+        d['xmpRights:Owner'] ||
+        d['dc:creator'] ||
+        d['dcterms:title'] ||
+        'iDigBio publisher',
+      license: shortLicense(
+        t.rights || d['dcterms:rights'] || d['xmpRights:UsageTerms'] || '',
+      ),
+      where: '',
+      link: rec
+        ? `https://portal.idigbio.org/portal/records/${rec}`
+        : 'https://portal.idigbio.org',
+    });
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+/** Specimen photos from iDigBio (no key): California specimens first, then any. */
+export async function loadIdigbio(taxon) {
+  const q = (rq) =>
+    `https://search.idigbio.org/v2/search/media/?rq=${encodeURIComponent(JSON.stringify(rq))}&limit=12`;
+  const name = taxon.toLowerCase();
+  const ca = await json(
+    q({ scientificname: name, stateprovince: 'california' }),
+  ).catch(() => ({ items: [] }));
+  let imgs = idigbioImages(ca.items).map((i) => ({
+    ...i,
+    where: 'California',
+  }));
+  if (imgs.length < 2) {
+    const any = await json(q({ scientificname: name })).catch(() => ({
+      items: [],
+    }));
+    imgs = [...imgs, ...idigbioImages(any.items)]
+      .filter((v, i, a) => a.findIndex((x) => x.src === v.src) === i)
+      .slice(0, 4);
+  }
+  return imgs;
+}
+
+/** Smithsonian Open Access rows -> pictures. Only used when an api.data.gov key is set. */
+export function smithsonianImages(rows, n = 4) {
+  const out = [];
+  for (const r of rows ?? []) {
+    const media = r.content?.descriptiveNonRepeating?.online_media?.media ?? [];
+    const m = media.find(
+      (x) =>
+        x.type === 'Images' &&
+        (x.content || x.thumbnail)?.startsWith('https://'),
+    );
+    if (!m) continue;
+    out.push({
+      src: m.thumbnail || m.content,
+      credit: r.content?.descriptiveNonRepeating?.data_source || 'Smithsonian',
+      license:
+        m.usage?.access === 'CC0' ? 'CC0' : m.usage?.access || 'see record',
+      where: r.title || '',
+      link:
+        r.content?.descriptiveNonRepeating?.record_link ||
+        'https://www.si.edu/openaccess',
+    });
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+export async function loadSmithsonian(taxon, key) {
+  if (!key) return [];
+  const url = `https://api.si.edu/openaccess/api/v1.0/search?q=${encodeURIComponent(`${taxon} AND online_media_type:Images`)}&rows=10&api_key=${encodeURIComponent(key)}`;
+  const d = await json(url).catch(() => null);
+  return smithsonianImages(d?.response?.rows);
+}

@@ -20,3 +20,22 @@ test('wiki titles try species then genus', () => {
   assert.deepEqual(wikiTitles('Imagotaria downsi'), ['Imagotaria downsi', 'Imagotaria']);
   assert.deepEqual(wikiTitles('Naticidae'), ['Naticidae']);
 });
+
+import { summarizeLexicon } from './geoUnit.js';
+
+test('lexicon summary merges columns into lithology percentages', () => {
+  const s = summarizeLexicon(
+    { strat_name: 'Purisima', strat_name_long: 'Purisima Formation', rank: 'Fm', strat_name_id: 1667, concept_id: 14197, b_age: '8.342', t_age: '0.6538', b_period: 'Neogene', t_period: 'Neogene' },
+    [
+      { max_thick: 1725, lith: [{ name: 'sandstone', prop: 0.75 }, { name: 'siltstone', prop: 0.25 }], environ: [{ name: 'marine' }] },
+      { max_thick: 300, lith: [{ name: 'sandstone', prop: 0.5 }, { name: 'mudstone', prop: 0.5 }], environ: [{ name: 'shoreface' }] },
+    ],
+  );
+  assert.equal(s.rank, 'Formation');
+  assert.equal(s.range, '8.3–0.7 Ma (Neogene)');
+  assert.equal(s.maxThicknessM, 1725);
+  assert.equal(s.lithology, 'sandstone 63%, mudstone 25%, siltstone 13%');
+  assert.equal(s.environments, 'marine, shoreface');
+  assert.match(s.conceptUrl, /14197/);
+  assert.equal(summarizeLexicon(undefined), null);
+});

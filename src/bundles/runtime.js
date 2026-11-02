@@ -4,8 +4,17 @@
 import * as Cesium from 'cesium';
 import { leftDock } from '../georecon/leftDock.js';
 import { el, fields, link, openModal } from '../georecon/modal.js';
-import { loadFossilDetails } from '../georecon/fossilInfo.js';
-import { loadUnitAt, loadWikiSummary } from '../georecon/geoUnit.js';
+import {
+  loadFossilDetails,
+  loadIdigbio,
+  loadSmithsonian,
+} from '../georecon/fossilInfo.js';
+import { mountFossil3d } from '../georecon/fossilSlots.js';
+import {
+  loadLexicon,
+  loadUnitAt,
+  loadWikiSummary,
+} from '../georecon/geoUnit.js';
 import {
   basemapOptions,
   getBasemap,
@@ -390,6 +399,42 @@ function showCapture(props) {
   );
 }
 
+/** Captioned image grid; images that fail to load (hotlink refused) are dropped. */
+function pictureSection(title, pictures, alt) {
+  const grid = el('div', {
+    style:
+      'display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin:4px 0 8px',
+  });
+  for (const img of pictures) {
+    const fig = el(
+      'figure',
+      { style: 'margin:0' },
+      el('img', {
+        src: img.src,
+        alt,
+        loading: 'lazy',
+        style:
+          'width:100%;height:90px;object-fit:cover;border:1px solid #1a6f80',
+      }),
+      el(
+        'figcaption',
+        { style: 'font-size:10px;color:#1a9fb8;overflow-wrap:anywhere' },
+        link(img.link, img.credit),
+        ` · ${img.license}`,
+        img.where ? ` · ${img.where}` : '',
+      ),
+    );
+    fig.querySelector('img').addEventListener('error', () => fig.remove());
+    grid.append(fig);
+  }
+  return el(
+    'div',
+    {},
+    el('div', { style: 'color:#ffb238;margin-top:8px' }, title),
+    grid,
+  );
+}
+
 async function showFossil(props) {
   const body = openModal(`FOSSIL · ${props.tna || 'occurrence'}`);
   const status = el(
@@ -443,8 +488,37 @@ async function showFossil(props) {
         link(d.pbdbUrl, 'PBDB collection ↗'),
       ),
     );
+    // Hook for the fossil3d module: hidden until a renderer registers.
+    const slot3d = el('div', {
+      'data-gr-slot': 'fossil-3d',
+      'data-oid': d.oid,
+      'data-taxon': d.taxon,
+      hidden: '',
+      style: 'margin:4px 0 8px;min-height:200px;border:1px solid #1a6f80',
+    });
+    body.append(slot3d);
+    mountFossil3d(slot3d, d);
     const wikiBox = el('div', { style: 'margin:4px 0 8px' });
     body.append(wikiBox);
+    const museumBox = el('div');
+    body.append(museumBox);
+    Promise.all([
+      loadIdigbio(d.taxon),
+      loadSmithsonian(d.taxon, import.meta.env?.VITE_SI_API_KEY),
+    ]).then(([idb, si]) => {
+      if (idb.length)
+        museumBox.append(
+          pictureSection(
+            'MUSEUM SPECIMENS (iDigBio)',
+            idb,
+            `${d.taxon} specimen`,
+          ),
+        ); // i18n-ignore: GEO-RECON fork panel, English only
+      if (si.length)
+        museumBox.append(
+          pictureSection('SMITHSONIAN OPEN ACCESS', si, `${d.taxon} specimen`),
+        ); // i18n-ignore: GEO-RECON fork panel, English only
+    });
     loadWikiSummary(d.taxon).then((w) => {
       if (!w) return;
       wikiBox.append(
