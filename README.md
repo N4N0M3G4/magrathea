@@ -14,16 +14,42 @@ Magrathea puts the rocks under your feet on a 3D globe: geologic map units, know
   ![Geologic unit details: Vaqueros Sandstone, Oligocene, with Macrostrat source and CC BY 4.0 license](docs/screenshots/geologic-unit-details.png)
 
 - **Fossil occurrences.** A snapshot of about 725 Paleobiology Database (PBDB) occurrences around Scotts Valley. Click one for the taxon, its common group, age and reference. A live PBDB proxy fills in more details.
+
+  ![Fossil details for Balanus from PBDB collection 37531 at Majors Creek, Lompico Sandstone, with Crassostrea titan listed in the same collection](docs/screenshots/fossil-details.png)
+
 - **Museum specimens and names.** iDigBio specimen records and the Macrostrat strat-name lexicon add context to a fossil or a formation.
 - **Your field photos.** Photos from the phone land on the map as amber pins with a 25 m heading cone. Click one to see the photo.
-- **Object scans for photogrammetry.** The phone's guided scan uploads a full frame set (ARCore poses and camera intrinsics) to the hub, ready for a structure-from-motion pipeline. The fossil detail panel has a slot for a 3D model; the `fossil3d` viewer fills it once integrated.
+
+  ![A field photo of a fossil oyster valve, opened from its pin on the map](docs/screenshots/field-photo.png)
+
+- **Object scans for photogrammetry.** The phone's guided scan uploads a full frame set (ARCore poses and camera intrinsics) to the hub, ready for a structure-from-motion pipeline. See [Example: a giant oyster](#example-a-giant-oyster).
 - **Current pin.** Search an address or use GPS. Lock the zoom, recenter, or clear. The phone has the same pin.
 - **Basemaps and opacity.** Satellite, OpenStreetMap streets or CARTO dark (Esri streets, topo and dark gray with an ArcGIS key). Each layer keeps its own saved opacity.
 - **Data Bundles.** Optional data packs you add or remove from the command line, so the core app stays small.
 
   ![Pin controls and the Data Bundles panel: basemap picker, field photos, geologic map and PBDB fossil layers with opacity sliders](docs/screenshots/data-bundles-panel.png)
 
-**Not in the screenshots.** The fossil and field-photo pop-ups, the legend, and the 3D slot were not captured for this README. They need a clean click on a point in the headless browser we used, and we did not get one. Check them in your own browser.
+**Not in the screenshots.** The legend and the hub's 3D slot. The 3D viewer runs on its own today (see the example below); it is not wired into the fossil pop-up yet.
+
+## Example: a giant oyster
+
+The project started with a giant fossil oyster, probably *Crassostrea titan* (Miocene, about 10-16 million years old), found near Scotts Valley. Here is the flow from field to 3D.
+
+1. **Find it on the map.** The PBDB layer shows *Crassostrea titan* at Majors Creek, in the Lompico Sandstone (see the fossil details above).
+2. **Photo it in the field.** Slarti's CAPTURE drops a geotagged photo on the map (see the field photo above).
+3. **Scan it.** Slarti's SCAN OBJECT walks you around the shell and saves sharp frames with camera poses. Then you flip it and scan the other side. The frames upload to the hub.
+4. **Rebuild it.** On the hub, COLMAP and OpenMVS turn the frames into a mesh in Docker. This step lives in a separate `fossil3d` workspace that is not in this repo yet.
+5. **Place the piece on a whole shell.** The `fossil3d` registration step matches your fragment to a 3D model of a complete oyster and shows where it fits, with a confidence score.
+
+![A hinge fragment, in cyan, placed on a ghosted whole oyster shell, with 98% fit confidence](docs/screenshots/fossil3d-hinge-fit.png)
+
+![A margin fragment, in cyan, placed on the growing edge of the same reference shell, with 100% fit confidence](docs/screenshots/fossil3d-margin-fit.png)
+
+**What is real and what is a stand-in.**
+- No open 3D model of *C. titan* exists. The ghost shell is *Ostrea denselamellosa*, a related oyster from the Smithsonian (CC0).
+- These two fragments are synthetic: we cut them from the reference model, then added noise and an unknown pose and scale, to test the fit. They are not scans of the real find yet.
+- The mesh step has been tested on a standard photogrammetry test set, not yet on a Slarti scan.
+- Next: scan the real shell with Slarti, run the pipeline, and show the fit in the hub's fossil pop-up.
 
 ## Quick start
 

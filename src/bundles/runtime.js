@@ -613,7 +613,8 @@ async function showFossil(props) {
 function installPicking(viewer, geologyShown) {
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   handler.setInputAction((click) => {
-    for (const picked of viewer.scene.drillPick(click.position, 5)) {
+    // 9x9 px window: fossil dots are hollow rings, so a 1 px pick at their centre misses.
+    for (const picked of viewer.scene.drillPick(click.position, 5, 9, 9)) {
       const props = picked?.id?.properties?.getValue?.(Cesium.JulianDate.now());
       if (props?.grKind === 'fossil') return void showFossil(props);
       if (props?.grKind === 'capture') return void showCapture(props);
