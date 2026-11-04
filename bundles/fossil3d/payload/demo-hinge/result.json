@@ -1,0 +1,60 @@
+{
+  "transform_fragment_to_reference": [
+    [
+      0.27552467803132724,
+      -0.07499354758403556,
+      -0.2610963364324106,
+      0.08148687722839465
+    ],
+    [
+      -0.2695836569639253,
+      -0.1212973293772003,
+      -0.24964131682445442,
+      0.0959817083836356
+    ],
+    [
+      -0.03346611682914802,
+      0.3596833371017513,
+      -0.13862573108069745,
+      0.08706298745798172
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "scale_ref_per_fragment": 0.3869227019469549,
+  "fragment_size_vs_reference": 2.584,
+  "inlier_fraction": 0.953,
+  "coverage": 0.764,
+  "rmse_over_threshold": 0.277,
+  "uniqueness": 0.12,
+  "features": {
+    "fit": 0.9525,
+    "rmse": 0.2767,
+    "tight": 0.9963,
+    "far": 0.0,
+    "coverage": 0.7638,
+    "uniq": 0.1196,
+    "log_size": -0.4887
+  },
+  "confidence": 0.981,
+  "confidence_method": "calibrated logistic (pipeline/calibration.json)",
+  "confidence_label": "high",
+  "region": "hinge / ligament (umbo) region",
+  "position_along_hinge_to_margin": 0.149,
+  "candidates_tried": 37,
+  "reference": {
+    "taxon": "Ostrea denselamellosa",
+    "match_level": "family (Ostreidae) - stand-in for Crassostrea titan; no open 3D model of C. titan found, and the open Crassostrea scans are oddities (grown in a pipe, on a teapot)",
+    "source": "https://3d.si.edu/object/3d/ostrea-denselamellosa:f47a926a-ba6d-4ccd-a1ab-f1fb54a794ca",
+    "license": "CC0 (Smithsonian Open Access)",
+    "title": "Ostrea denselamellosa (oyster), NMNH Invertebrate Zoology"
+  },
+  "truth_check": {
+    "mean_vertex_error_over_length": 0.005,
+    "true_scale": 0.39999999999999997
+  }
+}

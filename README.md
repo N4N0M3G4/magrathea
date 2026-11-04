@@ -29,7 +29,7 @@ Magrathea puts the rocks under your feet on a 3D globe: geologic map units, know
 
   ![Pin controls and the Data Bundles panel: basemap picker, field photos, geologic map and PBDB fossil layers with opacity sliders](docs/screenshots/data-bundles-panel.png)
 
-**Not in the screenshots.** The legend and the hub's 3D slot. The 3D viewer runs on its own today (see the example below); it is not wired into the fossil pop-up yet.
+**Not in the screenshots.** The legend.
 
 ## Example: a giant oyster
 
@@ -40,6 +40,9 @@ The project started with a giant fossil oyster, probably *Crassostrea titan* (Mi
 3. **Scan it.** Slarti's SCAN OBJECT walks you around the shell and saves sharp frames with camera poses. Then you flip it and scan the other side. The frames upload to the hub.
 4. **Rebuild it.** On the hub, COLMAP and OpenMVS turn the frames into a mesh in Docker. This step lives in a separate `fossil3d` workspace that is not in this repo yet.
 5. **Place the piece on a whole shell.** The `fossil3d` registration step matches your fragment to a 3D model of a complete oyster and shows where it fits, with a confidence score.
+6. **See it in the hub.** Open any oyster in the fossil pop-up (for example *Crassostrea titan* at Majors Creek; pick it from the collection list) and the 3D view loads inside it. Drag to turn it. The `fossil3d` bundle supplies the models: `npm run bundle -- add fossil3d`.
+
+![The Crassostrea titan fossil pop-up with the 3D oyster view: a cyan hinge fragment fitted on a ghosted whole shell, marked as a synthetic demo](docs/screenshots/fossil-3d-popup.png)
 
 ![A hinge fragment, in cyan, placed on a ghosted whole oyster shell, with 98% fit confidence](docs/screenshots/fossil3d-hinge-fit.png)
 
@@ -49,7 +52,8 @@ The project started with a giant fossil oyster, probably *Crassostrea titan* (Mi
 - No open 3D model of *C. titan* exists. The ghost shell is *Ostrea denselamellosa*, a related oyster from the Smithsonian (CC0).
 - These two fragments are synthetic: we cut them from the reference model, then added noise and an unknown pose and scale, to test the fit. They are not scans of the real find yet.
 - The mesh step has been tested on a standard photogrammetry test set, not yet on a Slarti scan.
-- Next: scan the real shell with Slarti, run the pipeline, and show the fit in the hub's fossil pop-up.
+- Every oyster pop-up shows this same demo fragment, labeled DEMO, until real scans are matched to occurrences.
+- Next: scan the real shell with Slarti, run the pipeline, and show your own fragment's fit.
 
 ## Quick start
 
@@ -93,6 +97,7 @@ npm run bundle -- remove <id>   # delete files and state
 | `geology-scotts-valley` | installed | Macrostrat CC BY 4.0; USGS public domain |
 | `pbdb-fossils` | installed | PBDB CC BY 4.0 |
 | `field-captures` | installed | your own photos |
+| `fossil3d` | installed | CC0 (Smithsonian 3D oyster) |
 | `telegeography-submarine-cables` | not installed | **CC BY-NC-SA 3.0** |
 | `bhote-koshi-event-pack` | not installed | **CC BY-NC 4.0** |
 
@@ -112,7 +117,7 @@ Magrathea is a fork of [**God's Eye View**](https://github.com/bilawalsidhu/gods
 
 **What we added**
 - `bundles/`, `scripts/bundle.mjs`, `src/bundles/runtime.js`: the Data Bundles system and its layers (geology imagery, PBDB points, field-capture pins, object scans).
-- `src/georecon/`: current pin, geologic unit lookup, fossil info and 3D slot, legend, layer opacity prefs, left dock, modal.
+- `src/georecon/`: the 3D fossil viewer (three.js, loaded only when needed), current pin, geologic unit lookup, fossil info and 3D slot, legend, layer opacity prefs, left dock, modal.
 - `server/georecon/`: the PBDB proxy.
 - `server/ingest/`: the LAN ingest service for phone photos and object-scan sessions (pairing token, PUT by id, LAN-only guards).
 - Non-commercial data moved out of core into optional bundles.

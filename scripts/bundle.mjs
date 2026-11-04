@@ -3,7 +3,7 @@
 // Manifests live in bundles/<id>/bundle.json. Installed payloads and the
 // generated registry live under public/ (gitignored) so Vite serves them.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -55,6 +55,11 @@ async function add(id) {
     mkdirSync(dirname(to), { recursive: true });
     if (src.type === 'git') {
       writeFileSync(to, execFileSync('git', ['show', `${src.commit}:${f.from}`], { cwd: ROOT, maxBuffer: 1 << 28 }));
+    } else if (src.type === 'local') {
+      // Payload committed in this repo (from must stay inside the repo).
+      const from = resolve(ROOT, f.from);
+      if (!from.startsWith(ROOT + '/')) throw new Error(`local source outside repo: ${f.from}`);
+      copyFileSync(from, to);
     } else if (src.type === 'http') {
       const r = await fetch(f.from);
       if (!r.ok) throw new Error(`HTTP ${r.status} for ${f.from}`);

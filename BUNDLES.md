@@ -29,11 +29,11 @@ Reload the browser after a change.
 | `license`, `attribution` | Shown in the CLI; attribution is added to the Cesium credits |
 | `sizeBytes` | Approximate install size |
 | `defaultInstalled` | Installed by `defaults` |
-| `source.type` | `git` (files from a pinned upstream commit, offline, from local git objects), `http` (download), or `none` (streamed tiles, nothing to store) |
+| `source.type` | `git` (files from a pinned upstream commit, offline, from local git objects), `local` (files committed in this repo), `http` (download), or `none` (streamed tiles, nothing to store) |
 | `source.files[]` | `{from, to}`. `to` must be inside `public/` |
 | `source.url` | Human-readable origin |
 | `home` | Optional `{lat, lon, label}` for the fly-to button |
-| `layers[]` | Layers it registers. `type`: `imagery-xyz` (url, rectangle, alpha, maximumLevel), `points-pbdb` (data path, color), or `core` (only feeds files to a built-in GEV layer) |
+| `layers[]` | Layers it registers. `type`: `imagery-xyz` (url, rectangle, alpha, maximumLevel), `points-pbdb` (data path, color), `captures`, `fossil3d` (models matched to fossil pop-ups, no map layer), or `core` (only feeds files to a built-in GEV layer) |
 
 To add a new layer kind, add a builder to `BUILDERS` in `src/bundles/runtime.js`.
 
@@ -43,6 +43,7 @@ To add a new layer kind, add a builder to `BUILDERS` in `src/bundles/runtime.js`
 | `geology-scotts-valley` | installed | CC BY 4.0 (Macrostrat); USGS PD | Macrostrat carto tiles over Santa Cruz Mtns. `add` caches zoom 6-14 offline (693 tiles, about 32 MB, 4 requests at a time); the registry then points the layer at the cache. Turning it on also shows Cesium's base globe, because GEV hides it under photorealistic tiles. |
 | `pbdb-fossils` | installed | CC BY 4.0 (PBDB) | Snapshot of ~725 occurrences in the box -122.25..-121.75, 36.9..37.25. Re-run `add` to refresh it. |
 | `field-captures` | installed | your photos | Photos uploaded from the phone by the ingest service (below). Amber pins with a 25 m heading cone; click one to see the photo. The map re-reads the photo list every 10 s. |
+| `fossil3d` | installed | CC0 (Smithsonian Open Access) | 3D oyster reference (*Ostrea denselamellosa*) and a synthetic demo hinge fragment, committed under `bundles/fossil3d/payload/` (`source.type: local`). Oyster pop-ups (match `Ostreidae|Crassostrea|Ostrea`) show the 3D view; three.js loads only then. |
 | `telegeography-submarine-cables` | **not installed** | **CC BY-NC-SA 3.0** | Moved out of `src/data/local_data/`. The built-in Submarine Cables layer now reads `/bundles/telegeography-submarine-cables/`; without the bundle it shows as unavailable. |
 | `bhote-koshi-event-pack` | **not installed** | **CC BY-NC 4.0** | Moved out of `public/events/bhote-koshi-2026/`. Without it the Nepal event scene has no imagery. |
 

@@ -3,13 +3,20 @@
 // A missing registry means no bundles: the core app runs unchanged.
 import * as Cesium from 'cesium';
 import { leftDock } from '../georecon/leftDock.js';
-import { el, fields, link, openModal } from '../georecon/modal.js';
+import {
+  el,
+  fields,
+  link,
+  onModalClose,
+  openModal,
+} from '../georecon/modal.js';
 import {
   loadFossilDetails,
   loadIdigbio,
   loadSmithsonian,
 } from '../georecon/fossilInfo.js';
 import { mountFossil3d } from '../georecon/fossilSlots.js';
+import { registerFossil3dLayer } from '../georecon/fossil3dBundle.js';
 import {
   loadLexicon,
   loadUnitAt,
@@ -497,7 +504,10 @@ async function showFossil(props) {
       style: 'margin:4px 0 8px;min-height:200px;border:1px solid #1a6f80',
     });
     body.append(slot3d);
-    mountFossil3d(slot3d, d);
+    // Free the 3D view on close; if the modal closed while it loaded, free it now.
+    mountFossil3d(slot3d, d).then((dispose) =>
+      body.isConnected ? onModalClose(dispose) : dispose(),
+    );
     const wikiBox = el('div', { style: 'margin:4px 0 8px' });
     body.append(wikiBox);
     const museumBox = el('div');
@@ -742,6 +752,11 @@ export async function startBundles(viewer) {
   for (const bundle of bundles) {
     home ??= bundle.home ?? null;
     for (const layer of bundle.layers ?? []) {
+      // 3D models feed the fossil pop-up; no map layer, no panel row.
+      if (layer.type === 'fossil3d') {
+        registerFossil3dLayer(layer, BASE);
+        continue;
+      }
       const build = BUILDERS[layer.type];
       if (!build) continue; // 'core' layers are fed by files, nothing to add
       try {

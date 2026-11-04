@@ -2,10 +2,23 @@
 // DOM nodes (textContent), never innerHTML, since much of it is remote data.
 
 let current = null;
+let cleanups = [];
 
 export function closeModal() {
+  for (const fn of cleanups.splice(0)) {
+    try {
+      fn();
+    } catch (e) {
+      console.warn('[modal] cleanup failed:', e);
+    }
+  }
   current?.remove();
   current = null;
+}
+
+/** Run `fn` when the open modal closes (frees WebGL views and the like). */
+export function onModalClose(fn) {
+  cleanups.push(fn);
 }
 
 /** el('div', {style}, ...children) helper; strings become text nodes. */

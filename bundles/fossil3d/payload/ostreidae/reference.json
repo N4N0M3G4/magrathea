@@ -1,0 +1,37 @@
+{
+  "title": "Ostrea denselamellosa (oyster), NMNH Invertebrate Zoology",
+  "taxon": "Ostrea denselamellosa",
+  "match_level": "family (Ostreidae) - stand-in for Crassostrea titan; no open 3D model of C. titan found, and the open Crassostrea scans are oddities (grown in a pipe, on a teapot)",
+  "source": "https://3d.si.edu/object/3d/ostrea-denselamellosa:f47a926a-ba6d-4ccd-a1ab-f1fb54a794ca",
+  "license": "CC0 (Smithsonian Open Access)",
+  "note": "Modern Japanese oyster. C. titan is far larger, longer and thicker.",
+  "landmarks": {
+    "hinge": [
+      -0.03838653463744373,
+      0.004103031418987329,
+      -0.0008788277016942888
+    ],
+    "adductor_scar": [
+      0.012643440622912467,
+      0.003921387039214214,
+      -0.0005899995982346541
+    ],
+    "ventral_margin": [
+      0.0401729177379225,
+      0.003823394148358964,
+      -0.0004341835974665545
+    ],
+    "long_axis": [
+      -0.999977647879949,
+      0.0035594828080828824,
+      -0.005659842985727837
+    ],
+    "length": 0.07856120838492739,
+    "method": "auto (PCA heuristic, not curated)"
+  },
+  "extents_m": [
+    0.08596399798989296,
+    0.05350099876523018,
+    0.01743099931627512
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "fossil3d",
+  "name": "3D fossil reference models",
+  "version": "1",
+  "license": "CC0 (Smithsonian Open Access); demo fragment derived from it",
+  "attribution": "3D oyster: Smithsonian NMNH, CC0",
+  "sizeBytes": 3500000,
+  "defaultInstalled": true,
+  "source": {
+    "type": "local",
+    "url": "bundles/fossil3d/payload (built with the fossil3d pipeline)",
+    "files": [
+      {
+        "from": "bundles/fossil3d/payload/ostreidae/reference.glb",
+        "to": "public/bundles/fossil3d/ostreidae/reference.glb"
+      },
+      {
+        "from": "bundles/fossil3d/payload/ostreidae/reference.json",
+        "to": "public/bundles/fossil3d/ostreidae/reference.json"
+      },
+      {
+        "from": "bundles/fossil3d/payload/demo-hinge/fragment.ply",
+        "to": "public/bundles/fossil3d/demo-hinge/fragment.ply"
+      },
+      {
+        "from": "bundles/fossil3d/payload/demo-hinge/result.json",
+        "to": "public/bundles/fossil3d/demo-hinge/result.json"
+      }
+    ]
+  },
+  "layers": [
+    {
+      "id": "fossil3d",
+      "type": "fossil3d",
+      "name": "3D fossil models",
+      "models": [
+        {
+          "match": "Ostreidae|Crassostrea|Ostrea",
+          "referenceUrl": "bundles/fossil3d/ostreidae/reference.glb",
+          "referenceMeta": "bundles/fossil3d/ostreidae/reference.json",
+          "demo": {
+            "label": "DEMO :: synthetic hinge fragment cut from the reference, not a real scan",
+            "fragmentUrl": "bundles/fossil3d/demo-hinge/fragment.ply",
+            "result": "bundles/fossil3d/demo-hinge/result.json"
+          }
+        }
+      ]
+    }
+  ]
+}
