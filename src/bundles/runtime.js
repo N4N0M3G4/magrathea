@@ -440,7 +440,7 @@ async function showFossil(props) {
   const status = el(
     'div',
     { role: 'status', style: 'color:#1a9fb8' },
-    'Loading PBDB record…',
+    "Fetching this fossil's paperwork… nearly there!",
   ); // i18n-ignore: GEO-RECON fork panel, English only
   body.append(status);
   const siblings = byCollection.get(props.cid) ?? [];
@@ -579,7 +579,7 @@ async function showFossil(props) {
       ); // i18n-ignore: GEO-RECON fork panel, English only
     }
   } catch (e) {
-    status.textContent = `Could not load details: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
+    status.textContent = `The fossil records are shy today. Try again soon! (${e.message})`; // i18n-ignore: GEO-RECON fork panel, English only
   }
   if (siblings.length > 1) {
     const list = el('ul', { style: 'margin:4px 0 0;padding-left:18px' });
@@ -638,13 +638,16 @@ async function showUnit(lat, lon) {
   const status = el(
     'div',
     { role: 'status', style: 'color:#1a9fb8' },
-    'Asking Macrostrat…',
+    'Asking Macrostrat what you are standing on…',
   ); // i18n-ignore: GEO-RECON fork panel, English only
   body.append(status);
   try {
     const u = await loadUnitAt(lat, lon);
     status.remove();
-    if (!u) return void body.append('No mapped unit here.'); // i18n-ignore: GEO-RECON fork panel, English only
+    if (!u)
+      return void body.append(
+        'No mapped rock here. Uncharted ground, how thrilling!',
+      ); // i18n-ignore: GEO-RECON fork panel, English only
     body.append(
       el(
         'div',
@@ -673,7 +676,7 @@ async function showUnit(lat, lon) {
       ),
     );
   } catch (e) {
-    status.textContent = `Could not reach Macrostrat: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
+    status.textContent = `Macrostrat is not answering. Probably out to lunch! (${e.message})`; // i18n-ignore: GEO-RECON fork panel, English only
   }
 }
 

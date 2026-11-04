@@ -1,10 +1,10 @@
-# Geo Recon hub
+# Magrathea
 
-A 3D field map for **rockhounds and fossil hunters**. It runs on your laptop in a browser.
+The Geo Recon hub: a cheerful 3D field map for **rockhounds and fossil hunters**. It runs on your laptop in a browser.
 
-Geo Recon puts the rocks under your feet on a 3D globe: geologic map units, known fossil occurrences, museum specimens, and the photos and object scans you take in the field with the [Geo Recon phone app](https://github.com/dyodji/geo-recon-app). It started as a fossil hunt for giant Miocene oysters near Scotts Valley, California, so the default data covers the Santa Cruz Mountains.
+Magrathea puts the rocks under your feet on a 3D globe: geologic map units, known fossil occurrences, museum specimens, and the photos and object scans you take in the field with the [Slarti phone app](https://github.com/dyodji/geo-recon-app). It started as a fossil hunt for giant Miocene oysters near Scotts Valley, California, so the default data covers the Santa Cruz Mountains.
 
-![Macrostrat geology draped over the Santa Cruz Mountains, with the Geo Recon pin and Data Bundles panels on the left](docs/screenshots/geology-overlay.png)
+![Macrostrat geology draped over the Santa Cruz Mountains, with the pin and Data Bundles panels on the left](docs/screenshots/geology-overlay.png)
 
 ## What it does
 
@@ -76,7 +76,7 @@ Data on a map is not permission to dig. Collecting on public land, road right-of
 
 ## How we built it
 
-Geo Recon is a fork of [**God's Eye View**](https://github.com/bilawalsidhu/gods-eye-view) by Bilawal Sidhu (MIT). God's Eye View is a browser 3D globe on CesiumJS with a Vite front end, a small Node server that keeps API keys local, and many live data layers.
+Magrathea is a fork of [**God's Eye View**](https://github.com/bilawalsidhu/gods-eye-view) by Bilawal Sidhu (MIT). God's Eye View is a browser 3D globe on CesiumJS with a Vite front end, a small Node server that keeps API keys local, and many live data layers.
 
 **What we use from God's Eye View**
 - The CesiumJS globe, terrain, imagery and photorealistic 3D tiles.
@@ -124,9 +124,13 @@ Merge, do not rebase: `geo-recon` is pushed and shared.
 
 **What we own.** `bundles/`, `src/bundles/`, `src/georecon/`, `server/georecon/`, `server/ingest/`, `scripts/bundle.mjs`, `BUNDLES.md`, `docs/screenshots/`, and this README. Keep new work in these folders so upstream merges stay small.
 
+## The names
+
+Magrathea (the hub) and Slarti (the phone app) are a nod to the planet builders in Douglas Adams' *The Hitchhiker's Guide to the Galaxy*. The tone is meant to be cheerful, like a ship's computer that is a bit too happy to help. This is a fan nod for a personal project; it is not affiliated with or endorsed by the Douglas Adams estate. Pick an original name before any public or commercial release.
+
 ## Credits and license
 
-Geo Recon is built on [**God's Eye View**](https://github.com/bilawalsidhu/gods-eye-view) by **Bilawal Sidhu**. Thank you for the globe, the layer system and the open code.
+Magrathea is built on [**God's Eye View**](https://github.com/bilawalsidhu/gods-eye-view) by **Bilawal Sidhu**. Thank you for the globe, the layer system and the open code.
 
 The code is under the MIT License. Copyright (c) 2026 Bilawal Sidhu; our changes are released under the same license. See [LICENSE](LICENSE).
 

@@ -22,7 +22,7 @@ export async function mountFossil3d(container, info) {
   try {
     return (await renderer(container, info)) ?? (() => {});
   } catch (e) {
-    container.textContent = `3D view failed: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
+    container.textContent = `The 3D view tripped over something: ${e.message}`; // i18n-ignore: GEO-RECON fork panel, English only
     return () => {};
   }
 }

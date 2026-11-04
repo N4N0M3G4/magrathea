@@ -45,15 +45,19 @@ function button(text, title) {
 function locateOnce() {
   return new Promise((ok, fail) => {
     if (!navigator.geolocation)
-      return fail(new Error('This browser has no location access'));
+      return fail(
+        new Error(
+          'This browser cannot share your location. Pity, it would have been fun!',
+        ),
+      );
     navigator.geolocation.getCurrentPosition(
       (p) => ok(p.coords),
       (e) =>
         fail(
           new Error(
             e.code === 1
-              ? 'Location permission denied. Allow it in the browser address bar.'
-              : 'Could not get a location fix',
+              ? 'Location is blocked. Allow it in the address bar and we will try again!'
+              : 'No location fix yet. A bit more sky, and we will have you!',
           ),
         ),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
@@ -187,7 +191,7 @@ export function startCurrentPin(viewer) {
   );
   clearBtn.addEventListener('click', () => store.clear());
   async function useGps() {
-    status.textContent = 'Getting location…'; // i18n-ignore: GEO-RECON fork panel, English only
+    status.textContent = 'Finding you… this is the exciting part!'; // i18n-ignore: GEO-RECON fork panel, English only
     try {
       const c = await locateOnce();
       const pin = store.set({

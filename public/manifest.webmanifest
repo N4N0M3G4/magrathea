@@ -1,8 +1,8 @@
 {
   "id": ".",
-  "name": "God's Eye View",
-  "short_name": "God's Eye",
-  "description": "Live spatial intelligence in the browser.",
+  "name": "Magrathea",
+  "short_name": "Magrathea",
+  "description": "A cheerful field map for rockhounds and fossil hunters.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

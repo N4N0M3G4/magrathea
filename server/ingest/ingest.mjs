@@ -82,12 +82,12 @@ function readBody(req) {
 }
 
 const PAIR_PAGE =
-  () => `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pair GEO-RECON phone</title>
+  () => `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pair Slarti with Magrathea</title>
 <style>body{background:#040709;color:#3fe0ff;font:15px ui-monospace,Menlo,monospace;display:grid;place-items:center;min-height:100vh;margin:0}
 #qr{background:#fff;padding:16px}code{color:#ffb238;word-break:break-all;max-width:480px;display:block}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head>
-<body><div><h1>PAIR PHONE</h1><p>Scan with the phone camera. It opens GEO-RECON and saves this hub.</p><div id="qr"></div>
-<p>No QR? Enter this in the app:</p><code>${pairUri()}</code></div>
+<body><div><h1>HELLO, SLARTI!</h1><p>Scan this with the phone camera. Slarti opens and remembers this hub. Lovely!</p><div id="qr"></div>
+<p>No QR? No problem. Type this into Slarti:</p><code>${pairUri()}</code></div>
 <script>try{new QRCode(document.getElementById('qr'),{text:${JSON.stringify(pairUri())},width:280,height:280})}catch(e){document.getElementById('qr').remove()}</script></body></html>`;
 
 const server = createServer(async (req, res) => {
