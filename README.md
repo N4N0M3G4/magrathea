@@ -2,7 +2,7 @@
 
 The Geo Recon hub: a cheerful 3D field map for **rockhounds and fossil hunters**. It runs on your laptop in a browser.
 
-Magrathea puts the rocks under your feet on a 3D globe: geologic map units, known fossil occurrences, museum specimens, and the photos and object scans you take in the field with the [Slarti phone app](https://github.com/dyodji/geo-recon-app). It started as a fossil hunt for giant Miocene oysters near Scotts Valley, California, so the default data covers the Santa Cruz Mountains.
+Magrathea puts the rocks under your feet on a 3D globe: geologic map units, known fossil occurrences, museum specimens, and the photos and object scans you take in the field with the [Slarti phone app](https://github.com/dyodji/slarti). It started as a fossil hunt for giant Miocene oysters near Scotts Valley, California, so the default data covers the Santa Cruz Mountains.
 
 ![Macrostrat geology draped over the Santa Cruz Mountains, with the pin and Data Bundles panels on the left](docs/screenshots/geology-overlay.png)
 
@@ -30,8 +30,8 @@ Magrathea puts the rocks under your feet on a 3D globe: geologic map units, know
 You need Node.js 24.x (24.14.0 or later) or 26.x.
 
 ```bash
-git clone https://github.com/dyodji/geo-recon-hub.git
-cd geo-recon-hub
+git clone https://github.com/dyodji/magrathea.git
+cd magrathea
 git checkout geo-recon
 npm ci
 cp .env.example .env            # optional keys; never commit .env
